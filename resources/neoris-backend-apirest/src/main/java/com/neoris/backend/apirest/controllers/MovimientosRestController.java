@@ -25,6 +25,10 @@ import com.neoris.backend.apirest.models.entity.Movimiento;
 import com.neoris.backend.apirest.service.ICuentaService;
 import com.neoris.backend.apirest.service.IMovimientoService;
 
+/**
+ * Controlador REST para manejar las operaciones CRUD sobre la entidad Movimiento.
+ * Este controlador utiliza los servicios IMovimientoService y ICuentaService para realizar las operaciones en la base de datos.
+ */
 @RestController
 @RequestMapping("/api")
 public class MovimientosRestController {
@@ -35,11 +39,24 @@ public class MovimientosRestController {
     @Autowired
     private ICuentaService cuentaService;
 
+    /**
+     * Retorna una lista con todos los movimientos en la base de datos.
+     *
+     * @return lista de movimientos.
+     */
     @GetMapping("/movimientos")
     public List<Movimiento> index() {
         return movimientoService.findAll();
     }
 
+    /**
+     * Retorna un movimiento por su id.
+     * Si el movimiento no existe, retorna una respuesta con estado HTTP 404 (NOT_FOUND).
+     * Si ocurre un error al realizar la consulta, retorna una respuesta con estado HTTP 500 (INTERNAL_SERVER_ERROR)
+     *
+     * @param id identificador del movimiento a buscar.
+     * @return movimiento encontrado.
+     */
     @GetMapping("/movimientos/{id}")
     public ResponseEntity<?> show(@PathVariable Long id) {
         Movimiento movimiento = null;
@@ -60,6 +77,13 @@ public class MovimientosRestController {
         return new ResponseEntity<Movimiento>(movimiento, HttpStatus.OK);
     }
 
+    /**
+     * Crea un nuevo movimiento en la base de datos.
+     * Si ocurre un error al realizar el insert, retorna una respuesta con estado HTTP 500 (INTERNAL_SERVER_ERROR)
+     *
+     * @param movimiento movimiento a crear.
+     * @return movimiento creado.
+     */
     @PostMapping("/movimientos")
     public ResponseEntity<?> create(@RequestBody Movimiento movimiento) {
         Movimiento movimientoNew = null;
@@ -95,7 +119,13 @@ public class MovimientosRestController {
         response.put("Movimiento", movimientoNew);
         return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
     }
-
+    /**
+     * Actualiza una movimiento existente en la base de datos.
+     * Si ocurre un error al actualizar el movimiento, retorna una respuesta con estado HTTP 500 (INTERNAL_SERVER_ERROR)
+     *
+     * @param id     identificador del movimiento a actualizar.
+     * @return movimiento actualizado.
+     */
     @PutMapping("/movimientos/{id}")
     public ResponseEntity<?> update(@RequestBody Movimiento movimiento, @PathVariable Long id) {
         Movimiento movimientoActual = movimientoService.findById(id);
@@ -128,7 +158,11 @@ public class MovimientosRestController {
         response.put("Movimiento", movimientoUpdated);
         return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
     }
-
+    /**
+     * Elimina el movimiento del client
+     *
+     * @param id identificador del movimiento a eliminar
+     */
     @DeleteMapping("/movimientos/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<?> delete(@PathVariable Long id) {
