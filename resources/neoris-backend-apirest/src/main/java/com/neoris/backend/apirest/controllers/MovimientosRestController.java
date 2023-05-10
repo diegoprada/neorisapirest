@@ -1,10 +1,16 @@
 package com.neoris.backend.apirest.controllers;
 
-import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.neoris.backend.apirest.domain.models.MovimientoReq;
+import com.neoris.backend.apirest.exceptions.BadRequestExceptions;
+import com.neoris.backend.apirest.service.impl.ClienteServiceImpl;
+import com.neoris.backend.apirest.util.LoggerController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -19,9 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.neoris.backend.apirest.exceptions.MovimentosError;
-import com.neoris.backend.apirest.models.entity.Cuenta;
-import com.neoris.backend.apirest.models.entity.Movimiento;
+import com.neoris.backend.apirest.domain.entity.Cuenta;
+import com.neoris.backend.apirest.domain.entity.Movimiento;
 import com.neoris.backend.apirest.service.ICuentaService;
 import com.neoris.backend.apirest.service.IMovimientoService;
 
@@ -39,13 +44,17 @@ public class MovimientosRestController {
     @Autowired
     private ICuentaService cuentaService;
 
+    final Logger log = LoggerFactory.getLogger(MovimientosRestController.class.getName());
+
+
     /**
      * Retorna una lista con todos los movimientos en la base de datos.
      *
      * @return lista de movimientos.
      */
     @GetMapping("/movimientos")
-    public List<Movimiento> index() {
+    public List<Movimiento> index() throws UnknownHostException {
+        log.info(LoggerController.formatLoggerRst("Init Consume service {MovimientoServiceConAll};1;CON", "IN"));
         return movimientoService.findAll();
     }
 
@@ -58,9 +67,17 @@ public class MovimientosRestController {
      * @return movimiento encontrado.
      */
     @GetMapping("/movimientos/{id}")
-    public ResponseEntity<?> show(@PathVariable Long id) {
+    public ResponseEntity<?> show(@PathVariable Long id) throws UnknownHostException, BadRequestExceptions {
         Movimiento movimiento = null;
         Map<String, Object> response = new HashMap<>();
+
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
+
+        log.info(LoggerController.formatLoggerRst("Init Consume service {movimentoServiceCon};1;CON", "IN"));
+
+
         try {
             movimiento = movimientoService.findById(id);
 
@@ -85,30 +102,18 @@ public class MovimientosRestController {
      * @return movimiento creado.
      */
     @PostMapping("/movimientos")
-    public ResponseEntity<?> create(@RequestBody Movimiento movimiento) {
+    public ResponseEntity<?> create(@RequestBody MovimientoReq movimiento) throws BadRequestExceptions, UnknownHostException {
         Movimiento movimientoNew = null;
         Cuenta cuenta = null;
         Map<String, Object> response = new HashMap<>();
 
+        if (null == movimiento){
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR BODY", "INFO", 400);
+        }
+        log.info(LoggerController.formatLoggerRst("Init Consume service {cuentaServiceCreate};1;MAN;", "IN"));
+
         try {
-
-            cuenta = cuentaService.findByNumeroCuenta(movimiento.getCuenta().getNumeroCuenta());
-
-            if (cuenta.getSaldoInicial() == 0 && movimiento.getValor() < 0) {
-                response.put("mensaje", "Saldo no disponible !");
-                return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
-            }
-
-            if (movimiento.getValor() < 0) {
-                cuenta.setSaldoInicial(cuenta.getSaldoInicial() - (movimiento.getValor() * -1));
-            } else {
-                cuenta.setSaldoInicial(cuenta.getSaldoInicial() + movimiento.getValor());
-
-            }
-            movimiento.setCuenta(cuenta);
-            movimiento.setSaldo(cuenta.getSaldoInicial());
             movimientoNew = movimientoService.save(movimiento);
-
         } catch (DataAccessException e) {
             response.put("mensaje", "Error al realizar el insert en la base de datos");
             response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
@@ -127,25 +132,23 @@ public class MovimientosRestController {
      * @return movimiento actualizado.
      */
     @PutMapping("/movimientos/{id}")
-    public ResponseEntity<?> update(@RequestBody Movimiento movimiento, @PathVariable Long id) {
-        Movimiento movimientoActual = movimientoService.findById(id);
+    public ResponseEntity<?> update(@RequestBody Movimiento movimiento, @PathVariable Long id) throws BadRequestExceptions, UnknownHostException {
+
         Movimiento movimientoUpdated = null;
         Map<String, Object> response = new HashMap<>();
 
-        if (movimientoActual == null) {
-            response.put("mensaje",
-                    "Error: no se puede editar el Movimiento ID:".concat(" no existe en la base de datos"));
-            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
+        if (null == movimiento){
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR BODY", "INFO", 400);
         }
 
-        try {
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
 
-            movimientoActual.setFecha(movimiento.getFecha());
-            movimientoActual.setTipoMovimiento(movimiento.getTipoMovimiento());
-            movimientoActual.setValor(movimiento.getValor());
-            movimientoActual.setSaldo(movimiento.getSaldo());
-            movimientoActual.setCuenta(movimiento.getCuenta());
-            movimientoUpdated = movimientoService.save(movimientoActual);
+        log.info(LoggerController.formatLoggerRst("Init Consume service {cuentaServiceUpdate};1;MAN;", "IN"));
+
+        try {
+            movimientoUpdated = movimientoService.update(movimiento, id);
 
         } catch (DataAccessException e) {
             response.put("mensaje", "Error al actualizar el Movimiento en la base de datos");
@@ -153,7 +156,6 @@ public class MovimientosRestController {
             return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
-
         response.put("mensaje", "Movimiento ha sido actualizado con exíto !");
         response.put("Movimiento", movimientoUpdated);
         return new ResponseEntity<Map<String, Object>>(response, HttpStatus.CREATED);
@@ -165,8 +167,11 @@ public class MovimientosRestController {
      */
     @DeleteMapping("/movimientos/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) throws UnknownHostException, BadRequestExceptions {
         Map<String, Object> response = new HashMap<>();
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
         try {
             movimientoService.delete(id);
         } catch (DataAccessException e) {

@@ -1,4 +1,4 @@
-package com.neoris.backend.apirest.models.entity;
+package com.neoris.backend.apirest.domain.entity;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
@@ -16,6 +16,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.validation.constraints.*;
 /**
  * La clase Persona representa una persona con información personal básica.
  * Contiene atributos como nombre, género, edad, identificación, dirección y teléfono.
@@ -31,12 +32,17 @@ public class Persona implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	@Column(nullable = false)
+	@NotBlank(message = "El nombre no puede estar vacío")
 	private String nombre;
+	@Min(value = 0, message = "La edad debe ser mayor o igual a 0")
 	private String genero;
 	private int edad;
+	@NotBlank(message = "La identificación no puede estar vacía")
 	@Column(nullable = false, unique = true)
 	private String identificacion;
 	private String direccion;
+	@NotBlank(message = "El teléfono no puede estar vacío")
+	@Pattern(regexp = "[6][0-9]{8}")
 	private String telefono;
 	
 	

@@ -1,5 +1,5 @@
 
-package com.neoris.backend.apirest.models.entity;
+package com.neoris.backend.apirest.domain.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -16,6 +16,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.validation.constraints.*;
 
 /**
  * La clase Cliente representa a un cliente en el sistema.
@@ -29,7 +30,10 @@ import javax.xml.bind.annotation.XmlTransient;
 public class Cliente extends Persona {
 	@Id
 	private Long id;
+	@NotBlank(message = "La contraseña no puede estar vacía")
+	@Size(min = 6, max = 20, message = "La contraseña debe tener entre 3 y 20 caracteres")
 	private String contrasena;
+	@NotBlank(message = "El estado no puede estar vacío")
 	private String estado;
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "idCliente")
 	private Collection<Cuenta> cuentasCollection;

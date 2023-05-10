@@ -1,9 +1,16 @@
 package com.neoris.backend.apirest.controllers;
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.neoris.backend.apirest.domain.models.CuentaReq;
+import com.neoris.backend.apirest.exceptions.BadRequestExceptions;
+import com.neoris.backend.apirest.service.impl.ClienteServiceImpl;
+import com.neoris.backend.apirest.util.LoggerController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -18,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.neoris.backend.apirest.models.entity.Cuenta;
+import com.neoris.backend.apirest.domain.entity.Cuenta;
 import com.neoris.backend.apirest.service.ICuentaService;
 
 /**
@@ -31,14 +38,15 @@ public class CuentaRestController {
 
     @Autowired
     private ICuentaService cuentaService;
-
+    final Logger log = LoggerFactory.getLogger(CuentaRestController.class.getName());
     /**
      * Retorna una lista con todas las cuentas en la base de datos.
      *
      * @return lista de cuentas.
      */
     @GetMapping("/cuentas")
-    public List<Cuenta> index() {
+    public List<Cuenta> index() throws UnknownHostException {
+        log.info(LoggerController.formatLoggerRst("Init Consume service {CuentaServiceConAll};1;CON", "IN"));
         return cuentaService.findAll();
     }
 
@@ -51,9 +59,16 @@ public class CuentaRestController {
      * @return cuenta encontrada.
      */
     @GetMapping("/cuentas/{id}")
-    public ResponseEntity<?> show(@PathVariable Long id) {
+    public ResponseEntity<?> show(@PathVariable Long id) throws UnknownHostException, BadRequestExceptions {
         Cuenta cuenta = null;
         Map<String, Object> response = new HashMap<>();
+
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
+
+        log.info(LoggerController.formatLoggerRst("Init Consume service {cuentaServiceCon};1;CON", "IN"));
+
         try {
             cuenta = cuentaService.findById(id);
 
@@ -78,9 +93,15 @@ public class CuentaRestController {
      * @return cuenta creada.
      */
     @PostMapping("/cuentas")
-    public ResponseEntity<?> create(@RequestBody Cuenta cuenta) {
+    public ResponseEntity<?> create(@RequestBody CuentaReq cuenta) throws UnknownHostException, BadRequestExceptions {
         Cuenta cuentaNew = null;
         Map<String, Object> response = new HashMap<>();
+
+        if (null == cuenta){
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR BODY", "INFO", 400);
+        }
+        log.info(LoggerController.formatLoggerRst("Init Consume service {cuentaServiceCreate};1;MAN;", "IN"));
+
         try {
 
             cuentaNew = cuentaService.save(cuenta);
@@ -105,25 +126,22 @@ public class CuentaRestController {
      * @return cuenta actualizada.
      */
     @PutMapping("/cuentas/{id}")
-    public ResponseEntity<?> update(@RequestBody Cuenta cuenta, @PathVariable Long id) {
-        Cuenta cuentaActual = cuentaService.findById(id);
+    public ResponseEntity<?> update(@RequestBody CuentaReq cuenta, @PathVariable Long id) throws UnknownHostException, BadRequestExceptions {
         Cuenta cuentaUpdated = null;
         Map<String, Object> response = new HashMap<>();
 
-        if (cuentaActual == null) {
-            response.put("mensaje",
-                    "Error: no se puede editar el Cuenta ID:".concat(" no existe en la base de datos"));
-            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
+        if (null == cuenta){
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR BODY", "INFO", 400);
         }
 
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
+
+        log.info(LoggerController.formatLoggerRst("Init Consume service {cuentaServiceUpdate};1;MAN;", "IN"));
+
         try {
-
-            cuentaActual.setTipoCuenta(cuenta.getTipoCuenta());
-            cuentaActual.setSaldoInicial(cuenta.getSaldoInicial());
-            cuentaActual.setEstado(cuenta.getEstado());
-            cuentaActual.setIdCliente(cuenta.getIdCliente());
-            cuentaUpdated = cuentaService.save(cuentaActual);
-
+            cuentaUpdated = cuentaService.update(cuenta,id);
         } catch (DataAccessException e) {
             response.put("mensaje", "Error al actualizar el Cuenta en la base de datos");
             response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
@@ -143,7 +161,7 @@ public class CuentaRestController {
      */
     @DeleteMapping("/cuentas/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) throws UnknownHostException {
         Map<String, Object> response = new HashMap<>();
         try {
             cuentaService.delete(id);

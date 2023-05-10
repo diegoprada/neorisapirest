@@ -1,4 +1,4 @@
-package com.neoris.backend.apirest.models.entity;
+package com.neoris.backend.apirest.domain.entity;
 
 import java.io.Serializable;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -18,6 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.validation.constraints.*;
 
 /**
  * La clase Movimiento representa un movimiento en una cuenta bancaria. Contiene
@@ -33,10 +34,15 @@ public class Movimiento {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@NotNull(message = "La fecha no puede ser nula")
 	@Temporal(TemporalType.DATE)
 	private Date fecha;
+	@NotBlank(message = "El tipo de movimiento no puede estar vacío")
 	private String tipoMovimiento;
+	@NotNull(message = "El valor no puede ser nulo")
+	@DecimalMin(value = "0.0", inclusive = false, message = "El valor debe ser mayor que 0")
 	private double valor;
+	@NotNull(message = "El saldo no puede ser nulo")
 	private double saldo;
 
 	@ManyToOne

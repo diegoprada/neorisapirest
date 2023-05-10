@@ -1,4 +1,5 @@
 /* Populate tabla clientes */
+CREATE DATABASE IF NOT EXISTS bank_test;
 
 INSERT INTO personas (id, direccion, edad, genero, identificacion, nombre, telefono) VALUES(1, 'Otavalo sn y principal', 34, 'M', '1144149500', 'Jose Lema', '098254785');
 INSERT INTO personas (id, direccion, edad, genero, identificacion, nombre, telefono) VALUES(2, 'Amazonas y NNUU', 40, 'F', '1144149501', 'Marianela Montalvo', '097548965');

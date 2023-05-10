@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
+import com.neoris.backend.apirest.domain.entity.Cliente;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -19,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neoris.backend.apirest.controllers.ClienteRestController;
-import com.neoris.backend.apirest.models.entity.Cliente;
 import com.neoris.backend.apirest.service.IClienteService;
 
 @ExtendWith(SpringExtension.class)

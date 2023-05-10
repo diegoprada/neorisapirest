@@ -1,4 +1,4 @@
-package com.neoris.backend.apirest.models.entity;
+package com.neoris.backend.apirest.domain.entity;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -15,6 +15,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -33,13 +35,31 @@ public class Cuenta {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	@Column(nullable = false, unique = true)
+	@NotNull(message = "El número de cuenta no puede ser nulo")
+	@Min(value = 1, message = "El número de cuenta debe ser mayor o igual a 1")
 	private Long numeroCuenta;
+	@NotBlank(message = "El tipo de cuenta no puede estar vacío")
 	private String tipoCuenta;
+	@NotNull(message = "El saldo inicial no puede ser nulo")
+	@DecimalMin(value = "0.0", inclusive = false, message = "El saldo inicial debe ser mayor que 0")
 	private double saldoInicial;
+	@NotBlank(message = "El estado no puede estar vacío")
 	private String estado;
 	@JoinColumn(name = "id_cliente", referencedColumnName = "id")
 	@ManyToOne(optional = false)
 	private Cliente idCliente;
+
+	public Cuenta() {
+	}
+
+	public Cuenta(Long id, Long numeroCuenta, String tipoCuenta, double saldoInicial, String estado, Cliente idCliente) {
+		this.id = id;
+		this.numeroCuenta = numeroCuenta;
+		this.tipoCuenta = tipoCuenta;
+		this.saldoInicial = saldoInicial;
+		this.estado = estado;
+		this.idCliente = idCliente;
+	}
 
 	/**
 	 * Obtiene el identificador de la cuenta.

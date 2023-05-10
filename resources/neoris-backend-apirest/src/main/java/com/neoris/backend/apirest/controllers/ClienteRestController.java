@@ -1,9 +1,19 @@
 package com.neoris.backend.apirest.controllers;
 
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
+import com.neoris.backend.apirest.domain.entity.Cliente;
+import com.neoris.backend.apirest.domain.models.ClienteReq;
+import com.neoris.backend.apirest.exceptions.BadRequestExceptions;
+import com.neoris.backend.apirest.service.impl.ClienteServiceImpl;
+import com.neoris.backend.apirest.util.LoggerController;
+import com.neoris.backend.apirest.util.ValidateTypeData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -19,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.neoris.backend.apirest.models.entity.Cliente;
 import com.neoris.backend.apirest.service.IClienteService;
 
 /**
@@ -33,13 +42,16 @@ public class ClienteRestController {
     @Autowired
     private IClienteService clienteService;
 
+    final Logger log = LoggerFactory.getLogger(ClienteRestController.class.getName());
+
     /**
      * Retorna una lista con todos los clientes en la base de datos.
      *
      * @return lista de clientes.
      */
     @GetMapping("/clientes")
-    public List<Cliente> index() {
+    public List<Cliente> index() throws UnknownHostException {
+        log.info(LoggerController.formatLoggerRst("Init Consume service {clienteServiceConAll};1;CON", "IN"));
         return clienteService.findAll();
     }
 
@@ -53,9 +65,16 @@ public class ClienteRestController {
      * @return cliente encontrado.
      */
     @GetMapping("/clientes/{id}")
-    public ResponseEntity<?> show(@PathVariable Long id) {
+    public ResponseEntity<?> show(@PathVariable Long id) throws UnknownHostException, BadRequestExceptions {
         Cliente cliente = null;
         Map<String, Object> response = new HashMap<>();
+
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
+
+        log.info(LoggerController.formatLoggerRst("Init Consume service {clienteServiceCon};1;CON", "IN"));
+
         try {
             cliente = clienteService.findById(id);
 
@@ -80,12 +99,20 @@ public class ClienteRestController {
      * @return cliente creado.
      */
     @PostMapping("/clientes")
-    public ResponseEntity<?> create(@RequestBody Cliente cliente) {
+    public ResponseEntity<?> create(@RequestBody ClienteReq cliente) throws BadRequestExceptions, UnknownHostException {
         Cliente clienteNew = null;
         Map<String, Object> response = new HashMap<>();
+
+        if (null == cliente){
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR BODY", "INFO", 400);
+        }
+
+        log.info(LoggerController.formatLoggerRst("Init Consume service {clienteServiceCreate};1;CON", "IN"));
+
         try {
 
             clienteNew = clienteService.save(cliente);
+
         } catch (DataAccessException e) {
             response.put("mensaje", "Error al realizar el insert en la base de datos");
             response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
@@ -107,26 +134,22 @@ public class ClienteRestController {
      * @return cliente actualizado.
      */
     @PutMapping("/clientes/{id}")
-    public ResponseEntity<?> update(@RequestBody Cliente cliente, @PathVariable Long id) {
-        Cliente clienteActual = clienteService.findById(id);
+    public ResponseEntity<?> update(@RequestBody ClienteReq cliente, @PathVariable Long id) throws BadRequestExceptions, UnknownHostException {
         Cliente clienteUpdated = null;
         Map<String, Object> response = new HashMap<>();
 
-        if (clienteActual == null) {
-            response.put("mensaje",
-                    "Error: no se puede editar el cliente ID:".concat(" no existe en la base de datos"));
-            return new ResponseEntity<Map<String, Object>>(response, HttpStatus.NOT_FOUND);
+        if (null == cliente){
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR BODY", "INFO", 400);
         }
 
-        try {
-            clienteActual.setNombre(cliente.getNombre());
-            clienteActual.setGenero(cliente.getGenero());
-            clienteActual.setEdad(cliente.getEdad());
-            clienteActual.setDireccion(cliente.getDireccion());
-            clienteActual.setTelefono(cliente.getTelefono());
-            clienteActual.setEstado(cliente.getEstado());
-            clienteUpdated = clienteService.save(clienteActual);
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
 
+        log.info(LoggerController.formatLoggerRst("Init Consume service {clienteServiceUpdate};1;CON", "IN"));
+
+        try {
+            clienteUpdated = clienteService.update(cliente, id);
         } catch (DataAccessException e) {
             response.put("mensaje", "Error al actualizar el cliente en la base de datos");
             response.put("error", e.getMessage().concat(": ").concat(e.getMostSpecificCause().getMessage()));
@@ -141,12 +164,18 @@ public class ClienteRestController {
 
     /**
      * Elimina el cliente por el identificador del cliente
-     * @param id      identificador del cliente a eliminar
+     *
+     * @param id identificador del cliente a eliminar
      */
     @DeleteMapping("/clientes/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> delete(@PathVariable Long id) throws BadRequestExceptions, UnknownHostException {
         Map<String, Object> response = new HashMap<>();
+        if (null == id) {
+            throw new BadRequestExceptions("400", "INVALID REQUEST", "VALIDATE YOUR PARAMETERS ID", "INFO", 400);
+        }
+        log.info(LoggerController.formatLoggerRst("Init Consume service {clienteServiceDelete};1;CON", "IN"));
+
         try {
             clienteService.delete(id);
         } catch (DataAccessException e) {
